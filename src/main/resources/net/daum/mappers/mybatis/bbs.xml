@@ -1,0 +1,99 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<!DOCTYPE mapper
+PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="Bbs">
+	
+	<!-- 시퀀스 번호값 구함 -->
+	<select id="bbsNoSeq_Find" resultType="int">
+		select bbs_no_seq.nextval from dual
+	</select>
+	
+	<!-- 자료실 저장 -->	
+	<insert id="bbs_in" parameterType="bbs">
+		insert into bbs(bbs_no,bbs_name,bbs_title,bbs_pwd,
+		bbs_cont,bbs_file,bbs_hit,bbs_ref,bbs_step,bbs_level,bbs_date) 
+		values (bbs_no_seq.nextval, #{bbs_name},
+		#{bbs_title},#{bbs_pwd},#{bbs_cont},#{bbs_file},0,bbs_no_seq.nextval,0,0,sysdate)
+	</insert>
+	
+	<!-- 검색 전 후 레코드 개수 -->
+	<select id="bbs_count" resultType="int"> <!-- resultType속성은 반환타입(자료형) -->
+		select count(bbs_no) from bbs
+		<!-- 검색 조건 -->
+		<where>
+			<!-- 검색을 안한 경우 -> 총 레코드 개수를 반환 -->
+			<if test="find_field == ''"></if>
+			<!-- 제목으로 검색한 경우 -->
+			<if test="find_field == 'bbs_title'">
+				bbs_title like #{find_name}
+			</if>
+			<!-- 내용으로 검색한 경우 -->
+			<if test="find_field == 'bbs_cont'">
+				bbs_cont like #{find_name}
+			</if>
+		</where>
+	</select>
+	
+	<!-- 검색 전 후 목록 -->
+	<select id="bbs_list" parameterType="page" resultType="bbs">
+		select * from (
+		select rowNum rNum, bbs_no, bbs_name, bbs_title, bbs_hit, bbs_ref, bbs_step, bbs_level,
+		bbs_date from (select * from bbs
+		
+		<!-- 검색 조건 -->
+		<where>
+			<!-- 검색을 안한 경우 -> 총 레코드 개수를 반환 -->
+			<if test="find_field == ''"></if>
+			<!-- 제목으로 검색한 경우 -->
+			<if test="find_field == 'bbs_title'">
+				bbs_title like #{find_name}
+			</if>
+			<!-- 내용으로 검색한 경우 -->
+			<if test="find_field == 'bbs_cont'">
+				bbs_cont like #{find_name}
+			</if>
+		</where>
+		
+		order by bbs_ref desc, bbs_level asc)) where rNum &gt;=#{startrow}
+		and rNum &lt;=#{endrow}
+	</select>
+	
+	<!-- 조회수 증가 -->
+	<update id="bbs_hi" parameterType="int">
+		update bbs set bbs_hit = bbs_hit + 1 where bbs_no = #{bbs_no}
+	</update>
+	
+	<!-- 내용보기 -->
+	<select id="bbs_co" resultType="net.daum.vo.BbsVO">
+		select * from bbs where bbs_no = #{bbs_no}
+	</select>
+	
+	<!-- 답변 레벨 증가 -->
+	<update id="levelUp">
+		update bbs set bbs_level = bbs_level + 1 where bbs_ref = #{bbs_ref}
+		and bbs_level > #{bbs_level}
+	</update>
+	
+	<!-- 답변 저장 -->
+	<insert id="reply_in2">
+		insert into bbs (bbs_no, bbs_name, bbs_title, bbs_pwd, bbs_cont, bbs_hit,
+		bbs_ref, bbs_step, bbs_level, bbs_date)
+		values (bbs_no_seq.nextval, #{bbs_name}, #{bbs_title}, #{bbs_pwd}, #{bbs_cont},
+		0, #{bbs_ref}, #{bbs_step} + 1, #{bbs_level} + 1, sysdate)
+	</insert>
+	
+	<!-- 자료실 수정 -->
+	<update id="bbs_edit" parameterType="bbs">
+		update bbs set bbs_name = #{bbs_name}, bbs_title = #{bbs_title}, bbs_cont = #{bbs_cont},
+		bbs_file = #{bbs_file} where bbs_no = #{bbs_no}
+	</update>
+	
+	<!-- 자료실 삭제 -->
+	<delete id="bbs_del">
+		delete from bbs where bbs_no = #{bbs_no}
+	</delete>
+	
+</mapper>

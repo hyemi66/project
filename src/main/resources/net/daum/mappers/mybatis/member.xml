@@ -1,0 +1,62 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<!DOCTYPE mapper
+PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="Member">
+	
+	<!-- 아이디 중복 검색 -->
+	<select id="m_idcheck" parameterType="java.lang.String" resultType="member">
+		select * from member where mem_id = #{id}
+	</select>
+	
+	<!-- 우편주소 검색 -->
+	<select id="m_zip" resultType="zipcode">
+		select * from zipcode where gil like #{dong}
+	</select>
+	
+	<!-- 회원 저장 -->
+	<insert id="m_in" parameterType="member">
+		insert into member (mem_id, mem_pwd, mem_name, mem_zip, mem_zip2,
+		mem_addr, mem_addr2, mem_phone01, mem_phone02, mem_phone03, 
+		mail_id, mail_domain, mem_state, mem_date)
+		values (#{mem_id}, #{mem_pwd}, #{mem_name}, #{mem_zip}, #{mem_zip2},
+		#{mem_addr}, #{mem_addr2}, #{mem_phone01}, #{mem_phone02}, #{mem_phone03},
+		#{mail_id}, #{mail_domain}, 1, sysdate)
+	</insert>
+	
+	<!-- 비번 찾기 -> 아이디와 회원이름을 기준으로 회원정보 검색 -->
+	<select id="p_find" resultType="member">
+		select * from member where mem_id = #{mem_id} and mem_name = #{mem_name}
+	</select>
+	
+	<!-- 암호화 된 임시 비번으로 수정 -->
+	<update id="p_edit">
+		update member set mem_pwd = #{mem_pwd} where mem_id = #{mem_id}
+	</update>
+	
+	<!-- 가입회원 1인 경우와 아이디로 로그인 인증처리 -->
+	<select id="m_loginCheck" resultType="member">
+		select * from member where mem_id = #{login_id} and mem_state = 1
+	</select>
+	
+	<!-- 아이디에 해당하는 회원정보 읽어오기 -->
+	<select id="m_EditMember" resultType="member">
+		select * from member where mem_id = #{id}
+	</select>
+	
+	<!-- 회원정보 수정완료 -->
+	<update id="medit_ok">
+		update member set mem_pwd = #{mem_pwd}, mem_name = #{mem_name}, mem_zip = #{mem_zip}, mem_zip2 = #{mem_zip2},
+		mem_addr = #{mem_addr}, mem_addr2 = #{mem_addr2}, mem_phone01 = #{mem_phone01}, mem_phone02 = #{mem_phone02},
+		mem_phone03 = #{mem_phone03}, mail_id = #{mail_id}, mail_domain = #{mail_domain} where mem_id = #{mem_id}
+	</update>
+	
+	<!-- 회원 탈퇴 -->
+	<update id="mDel_ok">
+		update member set mem_delcont = #{mem_delcont}, mem_state = 2, mem_deldate = sysdate
+		where mem_id = #{mem_id}
+	</update>
+	
+</mapper>

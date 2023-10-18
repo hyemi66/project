@@ -1,0 +1,64 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<!DOCTYPE mapper
+PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="Admin_bbs">
+	
+	<!-- 관리자 자료실 검색 전 후 레코드 개수 -->
+	<select id="abbs_count" resultType="int">
+		select count(bbs_no) from bbs
+		<where>
+			<if test="find_field == ''"></if> <!-- 검색 안한 경우 : 전체 레코드 개수 -->
+			<if test="find_field == 'bbs_title'"> <!-- 제목 기준으로 검색한 경우 -->
+				bbs_title like #{find_name}
+			</if>
+			<if test="find_field == 'bbs_cont'"> <!-- 내용 기준으로 검색한 경우 -->
+				bbs_cont like #{find_name}
+			</if>
+		</where>
+	</select>
+	
+	<!-- 관리자 자료실 검색 전 후 목록 -->
+	<select id="abbs_list" parameterType="page" resultType="bbs">
+		select * from (
+		select rowNum rNum, bbs_no, bbs_name, bbs_title, bbs_hit, bbs_ref, bbs_step,
+		bbs_level, bbs_date from (select * from bbs
+		<where>
+			<if test="find_field == ''"></if> <!-- 검색어를 입력하지 않은 경우 -->
+			<if test="find_field == 'bbs_title'"> <!-- 제목으로 검색한 경우 -->
+				bbs_title like #{find_name} <!-- sql문에서 like는 ~와 비슷한 문자를 검색하는 검색연산자 -->
+			</if>
+			<if test="find_field == 'bbs_cont'"> <!-- 내용으로 검색한 경우 -->
+				bbs_cont like #{find_name}
+			</if>
+		</where>
+		order by bbs_ref desc, bbs_level asc))
+		where rNum &gt;= #{startrow} and rNum &lt;= #{endrow}
+	</select>
+	
+	<!-- 관리자 자료실 저장 -->
+	<insert id="abbs_in">
+		insert into bbs (bbs_no, bbs_name, bbs_title, bbs_pwd, bbs_cont, bbs_file,
+		bbs_hit, bbs_ref, bbs_step, bbs_level, bbs_date) values (bbs_no_seq.nextval, #{bbs_name},
+		#{bbs_title}, #{bbs_pwd}, #{bbs_cont}, #{bbs_file}, 0, bbs_no_seq.nextval, 0, 0, sysdate)
+	</insert>
+	
+	<!-- 관리자 자료실 상세정보 + 수정폼 -->
+	<select id="abbs_cont" parameterType="int" resultType="bbs">
+		select * from bbs where bbs_no = #{bbs_no}
+	</select>
+	
+	<!-- 관리자 자료실 수정완료 -->
+	<update id="abbs_edit">
+		update bbs set bbs_name = #{bbs_name}, bbs_title = #{bbs_title}, bbs_cont = #{bbs_cont}, bbs_file = #{bbs_file}
+		where bbs_no = #{bbs_no}
+	</update>
+	
+	<!-- 관리자 자료실 삭제 -->
+	<delete id="abbs_del">
+		delete from bbs where bbs_no = #{no}
+	</delete>
+	
+</mapper>
